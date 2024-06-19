@@ -79,49 +79,55 @@ def handle_message(event):
             msg_text = event.message.text
             reply_token = event.reply_token
 
-            if "#指令" in msg_text:
+            if "/指令" in msg_text:
                 result_text = badminton.intro()
                 robot_reply_text(reply_token, result_text)
-            elif "#季繳" in msg_text:
+            elif "/季繳" in msg_text:
                 if badminton.is_admin(user_id):
                     member_list = msg_text.split(' ')[1:]
                     result_text = badminton.setup_permanent_member(member_list)
                     robot_reply_text(reply_token, result_text)
                 else:
                     robot_reply_text(reply_token, '你以為你是誰?')
-            elif "#建立" in msg_text:
+            elif "/建立" in msg_text:
                 if badminton.is_admin(user_id):
                     date = msg_text.split(' ')[1]
                     msg_text = badminton.initiate(date)
                     robot_reply_text(reply_token, msg_text)
                 else:
                     robot_reply_text(reply_token, '你以為你是誰?')
-            elif "#時間" in msg_text:
+            elif "/滿" in msg_text:
+                if badminton.is_admin(user_id):
+                    msg_text = badminton.over()
+                    robot_reply_text(reply_token, msg_text)
+                else:
+                    robot_reply_text(reply_token, '你以為你是誰?')
+            elif "/時間" in msg_text:
                 if badminton.is_admin(user_id):
                     input_time = msg_text.split(' ')[1]
                     msg_text = badminton.edit_time(input_time)
                     robot_reply_text(reply_token, msg_text)
                 else:
                     robot_reply_text(reply_token, '你以為你是誰?')
-            elif "#場地" in msg_text:
+            elif "/場地" in msg_text:
                 if badminton.is_admin(user_id):
                     area = msg_text.split(' ')[1]
                     msg_text = badminton.edit_area(area)
                     robot_reply_text(reply_token, msg_text)
                 else:
                     robot_reply_text(reply_token, '你以為你是誰?')
-            elif "#報名" in msg_text:
+            elif "/報名" in msg_text:
                 apply_user_data = msg_text.split(' ')
                 if len(apply_user_data) == 1:
                     robot_reply_text(reply_token, '空格謝謝')
                 else:
                     msg_text = badminton.apply(apply_user_data[1])
                 robot_reply_text(reply_token, msg_text)
-            elif "#取消" in msg_text:
+            elif "/取消" in msg_text:
                 cancel_user = msg_text.split(' ')[1]
                 msg_text = badminton.cancel(cancel_user)
                 robot_reply_text(reply_token, msg_text)
-            elif "#查看" in msg_text:
+            elif "/查看" in msg_text:
                 msg_text = badminton.get_summary()
                 robot_reply_text(reply_token, msg_text)
             elif "!!!貼圖" in msg_text:
@@ -161,7 +167,7 @@ def handle_message(event):
             else:
                 print(f'忽略{msg_text}')
     except Exception as e:
-        robot_reply_text(reply_token, '好了吧...被你弄壞了')
+        robot_reply_text(reply_token, '發生錯誤!我被玩壞了...')
         badminton.write(e.args[0])
 
 

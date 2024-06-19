@@ -64,16 +64,28 @@ def initiate(input_date):
     return get_summary()
 
 
+def over():
+    global initialize
+    result_msg = ''
+    if initialize == False:
+        result_msg = '還沒開喔~~~不要急:)'
+    else:
+        initialize = False
+        result_msg = get_summary()
+        result_msg += '🈵'
+    return result_msg
+
+
 def intro():
     result_msg = ""\
-        "#指令 (印出說明)\n" \
-        "#建立 01/01 (管理員開啟活動)\n"\
-        "#季繳 A,B,... (設定季繳清單)\n"\
-        "#場地 3 (設定場地數)\n"\
-        "#時間 20:00-22:00 (設定時間)\n"\
-        "#報名 XXX (XXX報名)\n"\
-        "#取消 XXX (XXX取消)\n"\
-        "#查看 (印出最新資訊)"\
+        "/指令 (印出說明)\n" \
+        "/建立 01/01 (管理員開啟活動)\n"\
+        "/季繳 A,B,... (設定季繳清單)\n"\
+        "/場地 3 (設定場地數)\n"\
+        "/時間 20:00-22:00 (設定時間)\n"\
+        "/報名 XXX (XXX報名)\n"\
+        "/取消 XXX (XXX取消)\n"\
+        "/查看 (印出最新資訊)"\
         ""
     return result_msg
 
@@ -148,6 +160,7 @@ def get_summary():
             mem_str += f'{mem_idx}.\n'
             mem_idx += 1
     summary_str += mem_str
+
     print(summary_str)
     write(summary_str)
 
