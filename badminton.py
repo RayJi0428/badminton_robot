@@ -1,56 +1,213 @@
 import datetime
 import os
+import logger
+import utils
+
 global target_date
 
-week_day_tw = ['一', '二', '三', '四', '五', '六', '日']
+tw_idx = ['一', '二', '三', '四', '五', '六', '日']
 
 initialize = False
-# 管理者id
-admin_list = ['Ud1ed3fe766c7a88edf91e7bae56c5b1d']
+
+
 # 日期
 date_string = '00/00'
 # 時間
-time_string = '20:00-22:00'
+time_slots = '20:00-22:00'
 # 星期
 week_day = '-'
 # 幾面場
-area = '3'
-# 成員清單
-permanent_member_list = ['花生', '靖玟', 'ray', '盈萱',
-                         '傑哥', '小彬', '子維', '仕安', 'gugu', 'ken', '曉淵', '子寧']
-parttime_member_list = []
-#
-# --------------------------------------------------------
+num_court = 3
+# 座位數
+num_vacancy = 24
+
+# 這一場的資料-----------------------------------------
+cur_quarterly_list = []
+cur_parttime_list = []
 
 
-def is_admin(user_id):
-    return user_id in admin_list
+# googlesheet資料--------------------------------------------
+admin_data_list = None  # 管理員
+param_data_list = None  # 參數
+court_name = ''  # 羽球場地
+num_court = 0  # 羽球場地數
+num_seat_per_court = 0  # 一場預設人數
+quarterly_list = []  # 季繳名單
+# 指令--------------------------------------------------------
+cmd_data_list = None
 
 
-# 設定季繳成員 ex:'@季繳 花生,靖玟'
-def setup_permanent_member(input_member_list):
-    global permanent_member_list
-    result_msg = '設定失敗'
-    for member in input_member_list:
-        member = member.lower()
-        if member not in permanent_member_list:
-            permanent_member_list.append(member)
-            result_msg = '設定成功'
+# 初始化
+def init(p_admin_data_list, p_param_data_list, p_cmd_data_list):
+    global admin_data_list, param_data_list, cmd_data_list
+    global court_name, num_court, num_seat_per_court, quarterly_list, time_slots
+
+    # 管理員清單
+    admin_data_list = p_admin_data_list
+
+    # 參數列表
+    param_data_list = p_param_data_list
+    court_name = utils.get_param_by_key(param_data_list, '場地')
+    num_court = utils.get_param_by_key(param_data_list, '預設場地數')
+    num_seat_per_court = utils.get_param_by_key(param_data_list, '一場預設人數')
+    time_slots = utils.get_param_by_key(param_data_list, '預設時段')
+    quarterly_list = utils.get_param_by_key(param_data_list, '季繳名單').split(',')
+
+    # 指令參數
+    cmd_data_list = p_cmd_data_list
+
+
+# 是否為指令訊息
+def find_cmd_in_msg(msg_text):
+    for data in cmd_data_list:
+        if data['KEY'] in msg_text:
+            return data
+    return None
+
+
+# 取得function
+def call_cmd_fn(fn_name, event):
+    fn = globals().get(fn_name)
+    if callable(fn):
+        return fn(event)
+    else:
+        logger.print(f'找不到對應function:{fn_name}')
+
+
+# 總結
+def get_summary():
+    global num_vacancy
+    # 總結
+    summary_str = ''
+
+    # 標題
+    title = f'【{date_string}(週{tw_idx[week_day]}){court_name}】\n{time_slots} {num_court}面場'
+    summary_str += title + '\n'
+
+    # 成員
+    final_permanent = cur_quarterly_list.copy()
+    final_partime = cur_parttime_list.copy()
+    mem_str = ''
+    for i in range(0, num_vacancy):
+        # 季繳
+        if len(final_permanent) > 0:
+            member = final_permanent.pop(0)
+            mem_str += f'{i+1}.{member}\n'
+        # 零打
+        elif len(final_partime) > 0:
+            member = final_partime.pop(0)
+            mem_str += f'{i+1}.{member}(零打)\n'
+        # 空位
+        else:
+            mem_str += f'{i+1}.\n'
+
+    summary_str += mem_str
+
+    logger.print(summary_str)
+    logger.print('---------------------------------------')
+
+    return summary_str
+
+
+# 指令處理================================================================
+# 指令處理================================================================
+# 指令處理================================================================
+
+
+# 指令說明
+def intro(event):
+    result_msg = '【指令說明】\n'
+    devider = False
+    for cmd_data in cmd_data_list:
+        if devider == False and cmd_data['管理員限定'] != '':
+            result_msg += "-----以下僅管理員使用-----\n"
+            devider = True
+        key = cmd_data['KEY']
+        tip = cmd_data['TIP']
+        result_msg += f'{key} ({tip})\n'
     return result_msg
 
-    # 建立活動
-    # 輸入規則 '@建立
-    # 取資料從索引2開始
+
+# 報名
+def apply(event):
+    msg_text = event.message.text
+    apply_member = msg_text.split(' ')[1].lower()
+
+    result_msg = '報名失敗T____T'
+    if initialize == False:
+        result_msg = '還沒開喔~~~不要急:)'
+    else:
+        if apply_member in cur_quarterly_list or apply_member in cur_parttime_list:
+            result_msg = '已經報了拉!是要報幾次凸'
+        else:
+            cur_parttime_list.append(apply_member)
+            result_msg = get_summary()
+
+    return result_msg
 
 
-def initiate(input_date):
+# 取消
+def cancel(event):
+    msg_text = event.message.text
+    cancel_member = msg_text.split(' ')[1].lower()
+
+    result_msg = '找不到阿...你確定你有報?凸'
+    if initialize == False:
+        result_msg = '還沒開取消屁?凸'
+    elif cancel_member in cur_quarterly_list:
+        cur_quarterly_list.remove(cancel_member)
+        result_msg = get_summary()
+    elif cancel_member in cur_parttime_list:
+        cur_parttime_list.remove(cancel_member)
+        result_msg = get_summary()
+
+    return result_msg
+
+
+# 查詢活動
+def query():
+    if initialize == False:
+        result_msg = '還沒開喔~~~不要急:)'
+    else:
+        result_msg = get_summary()
+
+    return result_msg
+
+
+# 管理員指令處理================================================================
+# 管理員指令處理================================================================
+# 管理員指令處理================================================================
+
+
+# 檢查user是否為管理員
+def is_admin(userID):
+    result = False
+    for admin in admin_data_list:
+        if admin['userID'] == userID:
+            result = True
+    return result
+
+
+# 建立活動
+def initiate(event):
+    msg_text = event.message.text
+    input_date = msg_text.split(' ')[1]
+
     global date_string
     global week_day
-    global time_string
-    global area
+    global time_slots
+    global num_court
     global initialize
+    global num_vacancy
+    global cur_quarterly_list
+    global cur_parttime_list
+
     initialize = True
-    data_idx = 0
+
+    cur_quarterly_list = quarterly_list.copy()
+    cur_parttime_list = []
+
+    num_vacancy = num_court * num_seat_per_court
     # 日期
     date_string = input_date
     date_string_list = input_date.split('/')
@@ -64,7 +221,19 @@ def initiate(input_date):
     return get_summary()
 
 
-def over():
+# 修改時間
+def edit_time_slots(event):
+    msg_text = event.message.text
+    input_time = msg_text.split(' ')[1]
+
+    global time_slots
+    time_slots = input_time
+    result_msg = get_summary()
+    return result_msg
+
+
+# 活動截止
+def events_end(event):
     global initialize
     result_msg = ''
     if initialize == False:
@@ -76,105 +245,59 @@ def over():
     return result_msg
 
 
-def intro():
-    result_msg = ""\
-        "/指令 (印出說明)\n" \
-        "/建立 01/01 (管理員開啟活動)\n"\
-        "/季繳 A,B,... (設定季繳清單)\n"\
-        "/場地 3 (設定場地數)\n"\
-        "/時間 20:00-22:00 (設定時間)\n"\
-        "/報名 XXX (XXX報名)\n"\
-        "/取消 XXX (XXX取消)\n"\
-        "/查看 (印出最新資訊)"\
-        ""
+# 設定面數
+def edit_court(event):
+    msg_text = event.message.text
+    input_court = int(msg_text.split(' ')[1])
+
+    global num_court
+    num_court = input_court
+    result_msg = get_summary()
     return result_msg
 
 
-def apply(member):
-    member = member.lower()
-    result_msg = '報名失敗T____T'
+# 設定座位數
+def edit_vacancy(event):
+    msg_text = event.message.text
+    input_vacancy = int(msg_text.split(' ')[1])
+
+    global initialize
+    global num_vacancy
+    result_msg = ''
     if initialize == False:
         result_msg = '還沒開喔~~~不要急:)'
     else:
-        if member in permanent_member_list or member in parttime_member_list:
-            result_msg = '已經報了拉!是要報幾次凸'
+        num_vacancy = input_vacancy
+        result_msg = get_summary()
+    return result_msg
+
+
+# 印使用者ID
+def get_uid(event):
+    return event.source.user_id
+
+
+# 印群組ID
+def get_gid(event):
+    if hasattr(event.source, 'group_id'):
+        return event.source.group_id
+    else:
+        return '沒有群組ID'
+
+
+# 設定季繳成員 ex:'@季繳 花生,靖玟'
+def add_quaterly_member(event):
+    msg_text = event.message.text
+    member_list_str = msg_text.split(' ')[1]
+    input_member_list = member_list_str.split(',')
+
+    global quarterly_list
+    result_msg = '設定失敗'
+    for member in input_member_list:
+        member = member.lower()
+        if member not in quarterly_list:
+            quarterly_list.append(member)
+            result_msg = '設定成功'
         else:
-            parttime_member_list.append(member)
-            result_msg = get_summary()
-
+            result_msg = '本來就在裡面了阿'
     return result_msg
-
-
-def cancel(member):
-    member = member.lower()
-    result_msg = '找不到阿...你確定你有報?凸'
-    if initialize == False:
-        result_msg = '還沒開取消屁?凸'
-    elif member in permanent_member_list:
-        permanent_member_list.remove(member)
-        result_msg = get_summary()
-    elif member in parttime_member_list:
-        parttime_member_list.remove(member)
-        result_msg = get_summary()
-
-    return result_msg
-
-
-def edit_area(input_area):
-    global area
-    area = input_area
-    result_msg = get_summary()
-    return result_msg
-
-
-def edit_time(input_time):
-    global time_string
-    time_string = input_time
-    result_msg = get_summary()
-    return result_msg
-
-
-def get_summary():
-    # 總結
-    summary_str = ''
-
-    # 標題
-    title = f'【{date_string}(週{week_day_tw[week_day]})崇德大都會】\n{time_string} {area}面場'
-    summary_str += title + '\n'
-
-    # 成員
-    seat_count = int(area) * 8
-    mem_str = ''
-    mem_idx = 1
-    # 季繳
-    for permanent_member in permanent_member_list:
-        mem_str += f'{mem_idx}.{permanent_member}\n'
-        mem_idx += 1
-    # 零打
-    for partime_member in parttime_member_list:
-        mem_str += f'{mem_idx}.{partime_member}(零打)\n'
-        mem_idx += 1
-    # 空位
-    if mem_idx < seat_count:
-        for i in range(mem_idx, (seat_count+1)):
-            mem_str += f'{mem_idx}.\n'
-            mem_idx += 1
-    summary_str += mem_str
-
-    print(summary_str)
-    write(summary_str)
-
-    return summary_str
-
-
-def write(input_log):
-    today = datetime.datetime.today()
-    log_path = f'log/{today.date()}-log.txt'
-    log = ''
-    with open(log_path, mode='r') as f:
-        log = f.read()
-
-    log += f'{today}:{input_log}\n'
-    with open(log_path, mode='w') as f:
-        f.write(log)
-        f.close()
