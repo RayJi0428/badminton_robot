@@ -125,7 +125,18 @@ def run(line_param_data_list):
                 cmd_data = badminton.find_cmd_in_msg(msg_text)
                 if cmd_data == None:
                     print(f'忽略:{msg_text}')
+                    if msg_text[0] == '/':
+                        emojis = [
+                            {
+                                "index": 15,
+                                "productId": "5ac1bfd5040ab15980c9b435",
+                                "emojiId": "003"
+                            }
+                        ]
+                        robot_reply_text(
+                            reply_token, '目前沒這功能喔...敬請期待$', emojis)
                     return
+
 
                 # admin指令權限檢查
                 if cmd_data['管理員限定'] != '' and badminton.is_admin(user_id) == False:

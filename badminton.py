@@ -24,7 +24,7 @@ num_vacancy = 24
 # 這一場的資料-----------------------------------------
 cur_quarterly_list = []
 cur_parttime_list = []
-
+cur_cancel_list = []
 
 # googlesheet資料--------------------------------------------
 admin_data_list = None  # 管理員
@@ -33,6 +33,8 @@ court_name = ''  # 羽球場地
 num_court = 0  # 羽球場地數
 num_seat_per_court = 0  # 一場預設人數
 quarterly_list = []  # 季繳名單
+tmp_quarterly_list = []  # 啟動時季繳修復資料
+tmp_partime_list = []  # 啟動時零打修復資料
 # 指令--------------------------------------------------------
 cmd_data_list = None
 
@@ -41,6 +43,7 @@ cmd_data_list = None
 def init(p_admin_data_list, p_param_data_list, p_cmd_data_list):
     global admin_data_list, param_data_list, cmd_data_list
     global court_name, num_court, num_seat_per_court, quarterly_list, time_slots
+    global tmp_quarterly_list, tmp_partime_list
 
     # 管理員清單
     admin_data_list = p_admin_data_list
@@ -52,6 +55,12 @@ def init(p_admin_data_list, p_param_data_list, p_cmd_data_list):
     num_seat_per_court = utils.get_param_by_key(param_data_list, '一場預設人數')
     time_slots = utils.get_param_by_key(param_data_list, '預設時段')
     quarterly_list = utils.get_param_by_key(param_data_list, '季繳名單').split(',')
+    tmp_quarterly_list_str = utils.get_param_by_key(param_data_list, '啟動修復季繳')
+    if tmp_quarterly_list_str != "":
+        tmp_quarterly_list = tmp_quarterly_list_str.split(',')
+    tmp_partime_list_str = utils.get_param_by_key(param_data_list, '啟動修復零打')
+    if tmp_partime_list_str != "":
+        tmp_partime_list = tmp_partime_list_str.split(',')
 
     # 指令參數
     cmd_data_list = p_cmd_data_list
@@ -133,15 +142,16 @@ def apply(event):
     msg_text = event.message.text
     apply_member = msg_text.split(' ')[1].lower()
 
-    result_msg = '報名失敗T____T'
+    result_msg = '報名失敗...請洽管理員 T____T'
     if initialize == False:
         result_msg = '還沒開喔~~~不要急:)'
     else:
         if apply_member in cur_quarterly_list or apply_member in cur_parttime_list:
             result_msg = '已經報了拉!是要報幾次凸'
         else:
-            cur_parttime_list.append(apply_member)
-            result_msg = get_summary()
+            if apply_member not in cur_cancel_list:
+                cur_parttime_list.append(apply_member)
+                result_msg = get_summary()
 
     return result_msg
 
@@ -151,21 +161,28 @@ def cancel(event):
     msg_text = event.message.text
     cancel_member = msg_text.split(' ')[1].lower()
 
+    cancel_result = False
     result_msg = '找不到阿...你確定你有報?凸'
     if initialize == False:
         result_msg = '還沒開取消屁?凸'
     elif cancel_member in cur_quarterly_list:
+        cancel_result = True
         cur_quarterly_list.remove(cancel_member)
         result_msg = get_summary()
     elif cancel_member in cur_parttime_list:
+        cancel_result = True
         cur_parttime_list.remove(cancel_member)
         result_msg = get_summary()
 
+    if cancel_result == True:
+        if cancel_member not in cur_cancel_list:
+            cur_cancel_list.append(cancel_member)
+        result_msg += "\n失去你我很難過..."
     return result_msg
 
 
 # 查詢活動
-def query():
+def query(event):
     if initialize == False:
         result_msg = '還沒開喔~~~不要急:)'
     else:
@@ -201,12 +218,13 @@ def initiate(event):
     global num_vacancy
     global cur_quarterly_list
     global cur_parttime_list
-
+    global cur_cancel_list
+    global tmp_quarterly_list, tmp_partime_list
     initialize = True
 
     cur_quarterly_list = quarterly_list.copy()
     cur_parttime_list = []
-
+    cur_cancel_list = []
     num_vacancy = num_court * num_seat_per_court
     # 日期
     date_string = input_date
@@ -218,11 +236,22 @@ def initiate(event):
     date_obj = datetime.datetime.strptime(full_date_string, '%Y-%m-%d')
     week_day = date_obj.weekday()
 
+    # 修復資料
+    if len(tmp_quarterly_list) > 0:
+        cur_quarterly_list = tmp_quarterly_list.copy()
+        tmp_quarterly_list = []
+    if len(tmp_partime_list) > 0:
+        cur_parttime_list = tmp_partime_list.copy()
+        tmp_partime_list = []
+
     return get_summary()
 
 
 # 修改時間
 def edit_time_slots(event):
+    if initialize == False:
+        return '請先建立活動'
+
     msg_text = event.message.text
     input_time = msg_text.split(' ')[1]
 
@@ -234,41 +263,45 @@ def edit_time_slots(event):
 
 # 活動截止
 def events_end(event):
+
     global initialize
-    result_msg = ''
+
     if initialize == False:
-        result_msg = '還沒開喔~~~不要急:)'
-    else:
-        initialize = False
-        result_msg = get_summary()
-        result_msg += '🈵'
+        return '請先建立活動'
+
+    result_msg = ''
+    initialize = False
+    result_msg = get_summary()
+    result_msg += '🈵'
     return result_msg
 
 
 # 設定面數
 def edit_court(event):
+    global num_vacancy
+    if initialize == False:
+        return '請先建立活動'
     msg_text = event.message.text
     input_court = int(msg_text.split(' ')[1])
 
     global num_court
     num_court = input_court
+    num_vacancy = num_court * num_seat_per_court
     result_msg = get_summary()
     return result_msg
 
 
 # 設定座位數
 def edit_vacancy(event):
+    if initialize == False:
+        return '請先建立活動'
+
     msg_text = event.message.text
     input_vacancy = int(msg_text.split(' ')[1])
 
-    global initialize
     global num_vacancy
-    result_msg = ''
-    if initialize == False:
-        result_msg = '還沒開喔~~~不要急:)'
-    else:
-        num_vacancy = input_vacancy
-        result_msg = get_summary()
+    num_vacancy = input_vacancy
+    result_msg = get_summary()
     return result_msg
 
 
