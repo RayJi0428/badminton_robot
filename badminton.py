@@ -2,7 +2,7 @@ import datetime
 import os
 import logger
 import utils
-
+from result_data import ResultData
 global target_date
 
 tw_idx = ['一', '二', '三', '四', '五', '六', '日']
@@ -56,10 +56,10 @@ def init(p_admin_data_list, p_param_data_list, p_cmd_data_list):
     time_slots = utils.get_param_by_key(param_data_list, '預設時段')
     quarterly_list = utils.get_param_by_key(param_data_list, '季繳名單').split(',')
     tmp_quarterly_list_str = utils.get_param_by_key(param_data_list, '啟動修復季繳')
-    if tmp_quarterly_list_str != "":
+    if tmp_quarterly_list_str != None:
         tmp_quarterly_list = tmp_quarterly_list_str.split(',')
     tmp_partime_list_str = utils.get_param_by_key(param_data_list, '啟動修復零打')
-    if tmp_partime_list_str != "":
+    if tmp_partime_list_str != None:
         tmp_partime_list = tmp_partime_list_str.split(',')
 
     # 指令參數
@@ -75,7 +75,7 @@ def find_cmd_in_msg(msg_text):
 
 
 # 取得function
-def call_cmd_fn(fn_name, event):
+def call_cmd_fn(fn_name, event) -> ResultData:
     fn = globals().get(fn_name)
     if callable(fn):
         return fn(event)
@@ -125,35 +125,34 @@ def get_summary():
 
 # 指令說明
 def intro(event):
-    result_msg = '【指令說明】\n'
+    text = '【指令說明】\n'
     devider = False
     for cmd_data in cmd_data_list:
         if devider == False and cmd_data['管理員限定'] != '':
-            result_msg += "-----以下僅管理員使用-----\n"
+            text += "-----以下僅管理員使用-----\n"
             devider = True
         key = cmd_data['KEY']
         tip = cmd_data['TIP']
-        result_msg += f'{key} ({tip})\n'
-    return result_msg
+        text += f'{key} ({tip})\n'
+    return ResultData(text=text)
 
 
 # 報名
 def apply(event):
     msg_text = event.message.text
     apply_member = msg_text.split(' ')[1].lower()
-
-    result_msg = '報名失敗...請洽管理員 T____T'
+    text = '報名失敗...請洽管理員 T____T'
     if initialize == False:
-        result_msg = '還沒開喔~~~不要急:)'
+        text = '還沒開喔~~~不要急:)'
     else:
         if apply_member in cur_quarterly_list or apply_member in cur_parttime_list:
-            result_msg = '已經報了拉!是要報幾次凸'
+            text = '已經報了拉!是要報幾次凸'
         else:
             if apply_member not in cur_cancel_list:
                 cur_parttime_list.append(apply_member)
-                result_msg = get_summary()
+                text = get_summary()
 
-    return result_msg
+    return ResultData(text=text)
 
 
 # 取消
@@ -162,33 +161,33 @@ def cancel(event):
     cancel_member = msg_text.split(' ')[1].lower()
 
     cancel_result = False
-    result_msg = '找不到阿...你確定你有報?凸'
+    text = '找不到阿...你確定你有報?凸'
     if initialize == False:
-        result_msg = '還沒開取消屁?凸'
+        text = '還沒開取消屁?凸'
     elif cancel_member in cur_quarterly_list:
         cancel_result = True
         cur_quarterly_list.remove(cancel_member)
-        result_msg = get_summary()
+        text = get_summary()
     elif cancel_member in cur_parttime_list:
         cancel_result = True
         cur_parttime_list.remove(cancel_member)
-        result_msg = get_summary()
+        text = get_summary()
 
     if cancel_result == True:
         if cancel_member not in cur_cancel_list:
             cur_cancel_list.append(cancel_member)
-        result_msg += "\n失去你我很難過..."
-    return result_msg
+        text += "\n失去你我很難過..."
+    return ResultData(text=text)
 
 
 # 查詢活動
 def query(event):
     if initialize == False:
-        result_msg = '還沒開喔~~~不要急:)'
+        text = '還沒開喔~~~不要急:)'
     else:
-        result_msg = get_summary()
+        text = get_summary()
 
-    return result_msg
+    return ResultData(text=text)
 
 
 # 管理員指令處理================================================================
@@ -244,21 +243,21 @@ def initiate(event):
         cur_parttime_list = tmp_partime_list.copy()
         tmp_partime_list = []
 
-    return get_summary()
+    text = get_summary()
+    return ResultData(text=text)
 
 
 # 修改時間
 def edit_time_slots(event):
     if initialize == False:
-        return '請先建立活動'
-
+        return ResultData(text='請先建立活動')
     msg_text = event.message.text
     input_time = msg_text.split(' ')[1]
 
     global time_slots
     time_slots = input_time
-    result_msg = get_summary()
-    return result_msg
+    text = get_summary()
+    return ResultData(text=text)
 
 
 # 活動截止
@@ -267,55 +266,56 @@ def events_end(event):
     global initialize
 
     if initialize == False:
-        return '請先建立活動'
+        return ResultData(text='請先建立活動')
 
-    result_msg = ''
+    text = ''
     initialize = False
-    result_msg = get_summary()
-    result_msg += '🈵'
-    return result_msg
+    text = get_summary()
+    text += '🈵'
+    return ResultData(text=text)
 
 
 # 設定面數
 def edit_court(event):
     global num_vacancy
     if initialize == False:
-        return '請先建立活動'
+        return ResultData(text='請先建立活動')
     msg_text = event.message.text
     input_court = int(msg_text.split(' ')[1])
 
     global num_court
     num_court = input_court
     num_vacancy = num_court * num_seat_per_court
-    result_msg = get_summary()
-    return result_msg
+    text = get_summary()
+    return ResultData(text=text)
 
 
 # 設定座位數
 def edit_vacancy(event):
     if initialize == False:
-        return '請先建立活動'
+        return ResultData(text='請先建立活動')
 
     msg_text = event.message.text
     input_vacancy = int(msg_text.split(' ')[1])
 
     global num_vacancy
     num_vacancy = input_vacancy
-    result_msg = get_summary()
-    return result_msg
+    text = get_summary()
+    return ResultData(text=text)
 
 
 # 印使用者ID
 def get_uid(event):
-    return event.source.user_id
+    text = event.source.user_id
+    return ResultData(text=text)
 
 
 # 印群組ID
 def get_gid(event):
+    text = '沒有群組ID'
     if hasattr(event.source, 'group_id'):
-        return event.source.group_id
-    else:
-        return '沒有群組ID'
+        text = event.source.group_id
+    return ResultData(text=text)
 
 
 # 設定季繳成員 ex:'@季繳 花生,靖玟'
@@ -325,12 +325,12 @@ def add_quaterly_member(event):
     input_member_list = member_list_str.split(',')
 
     global quarterly_list
-    result_msg = '設定失敗'
+    text = '設定失敗'
     for member in input_member_list:
         member = member.lower()
         if member not in quarterly_list:
             quarterly_list.append(member)
-            result_msg = '設定成功'
+            text = '設定成功'
         else:
-            result_msg = '本來就在裡面了阿'
-    return result_msg
+            text = '本來就在裡面了阿'
+    return ResultData(text=text)

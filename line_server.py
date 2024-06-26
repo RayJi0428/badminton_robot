@@ -4,7 +4,7 @@ import badminton
 import utils
 import logger
 import re
-
+from result_data import ResultData
 # 關閉相關
 import atexit
 import signal
@@ -126,6 +126,10 @@ def run(line_param_data_list):
                 reply_token = event.reply_token
                 print(f'user:{user_id}, msg:{msg_text}, token:{reply_token}')
 
+                if msg_text == 'aaa':
+                    robot_reply_image(
+                        reply_token, 'https://i.imgur.com/EsJ5HKa.png')
+                    return
                 # 不是指令直接忽略
                 cmd_data = badminton.find_cmd_in_msg(msg_text)
                 if cmd_data == None:
@@ -140,11 +144,15 @@ def run(line_param_data_list):
                     robot_reply_text(reply_token, '關你屁事?$', ["169"])
                     return
 
-                # 指令處理
-                result_text = badminton.call_cmd_fn(
+                # 指令處理----------------------------------------------
+                result_data = badminton.call_cmd_fn(
                     cmd_data['function'], event)
-                robot_reply_text(reply_token, result_text)
-                return
+                # 回應文字
+                if result_data.reply_text != None:
+                    robot_reply_text(
+                        reply_token, result_data.reply_text, result_data.reply_emojiIds)
+                elif result_data.reply_image != None:
+                    robot_reply_image(reply_token, result_data.reply_image)
         except Exception as e:
             robot_reply_text(reply_token, '發生錯誤!我被玩壞了$...', ["182"])
             logger.print(e.args[0])
@@ -156,7 +164,7 @@ def run(line_param_data_list):
 
 
 def find_all_hash_indexes(pattern, text):
-    # 用正则表达式找出所有 '#' 的索引
+    # 用正则表达式找出所有 '$' 的索引
     return [m.start() for m in re.finditer(pattern, text)]
 
 
@@ -174,6 +182,18 @@ def get_emojis(msg_text, p_emojiIds):
         emojis.append(
             Emoji(index=idx, productId="5ac1bfd5040ab15980c9b435", emojiId=emojiIds.pop(0)))
     return emojis
+
+
+# 回傳圖片
+def robot_reply_image(reply_token, img_url):
+    line_bot_api_instance.reply_message_with_http_info(
+        ReplyMessageRequest(
+            reply_token=reply_token,
+            messages=[ImageMessage(
+                originalContentUrl=img_url,
+                previewImageUrl=img_url)]
+        )
+    )
 # --------------------------------------------------
 # def get_friends_list(channel_access_token):
 #     headers = {
