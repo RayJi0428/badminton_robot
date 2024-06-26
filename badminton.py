@@ -142,23 +142,46 @@ def intro(event):
 def apply(event):
     msg_text = event.message.text
     user_id = event.source.user_id
-    apply_member = msg_text.split(' ')[1].lower()
-    text = '報名失敗...請洽管理員 T____T'
-    if initialize == False:
-        text = '還沒開喔~~~不要急:)'
-    else:
-        if apply_member in cur_quarterly_list or apply_member in cur_parttime_list:
-            if user_id in cur_blame_user:
-                return ResultData(image='https://i.imgur.com/ElfhW41.jpg')
-            else:
-                cur_blame_user.append(user_id)
-                return ResultData(text='已經報了拉!是要報幾次凸')
-        else:
-            if apply_member not in cur_cancel_list:
-                cur_parttime_list.append(apply_member)
-                text = get_summary()
+    apply_member_list = msg_text.split(' ')[1:]  # 第一個是指令key
+    result_data = ResultData()
 
-    return ResultData(text=text)
+    if initialize == False:
+        return ResultData(text='還沒開喔~~~不要急:)')
+
+    # 報名多人
+    for apply_member_name in apply_member_list:
+        apply_member_name = apply_member_name.lower()
+        # 名稱過長
+        if len(apply_member_name) > 20:
+            result_data = ResultData(
+                text=f'「{apply_member_name[0:5]}***」 太長了啦...$', emojiIds=['159'])
+            break
+        # 已經報名了
+        if apply_member_name in cur_quarterly_list or apply_member_name in cur_parttime_list:
+            blame_record = user_id + apply_member_name
+            if blame_record in cur_blame_user:
+                result_data = ResultData(
+                    image='https://i.imgur.com/ElfhW41.jpg')
+                break
+            else:
+                cur_blame_user.append(blame_record)
+                result_data = ResultData(
+                    text=f'{apply_member_name}已經報了拉!是要報幾次凸')
+                break
+        # 曾經取消又報名
+        elif apply_member_name in cur_cancel_list and is_admin(user_id) == False:
+            result_data = ResultData(
+                text=f'{apply_member_name}報名失敗，請洽管理員$', emojiIds=['183'])
+            break
+        # 報名成功
+        else:
+            if apply_member_name in quarterly_list:
+                cur_quarterly_list.append(apply_member_name)
+            else:
+                cur_parttime_list.append(apply_member_name)
+            result_data.reply_text = get_summary()
+
+    return result_data
 
 
 # 取消
@@ -182,8 +205,8 @@ def cancel(event):
     if cancel_result == True:
         if cancel_member not in cur_cancel_list:
             cur_cancel_list.append(cancel_member)
-        text += "\n失去你我很難過..."
-    return ResultData(text=text)
+        text += "\n失去你我很難過...$"
+    return ResultData(text=text, emojiIds=['179'])
 
 
 # 查詢活動
@@ -339,4 +362,4 @@ def add_quaterly_member(event):
 
 
 def admin_warning() -> ResultData:
-    return ResultData(text='請先建立活動$',emojiIds=['171'])
+    return ResultData(text='請先建立活動$', emojiIds=['171'])
