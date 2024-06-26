@@ -2,12 +2,12 @@ class ResultData:
     # 类属性
     class_attribute = "I am a class attribute"
 
-    reply_text = None
+    reply_text: str = None
     reply_emojiIds = None
-    reply_image = None
+    reply_image: str = None
 
     # 初始化方法（构造函数）
-    def __init__(self, text=None, emojiIds=None, image=None):
+    def __init__(self, text: str = None, emojiIds=None, image: str = None):
         # 实例属性
         self.reply_text = text
         self.reply_emojiIds = emojiIds

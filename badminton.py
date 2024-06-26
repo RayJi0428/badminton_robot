@@ -35,6 +35,7 @@ num_seat_per_court = 0  # 一場預設人數
 quarterly_list = []  # 季繳名單
 tmp_quarterly_list = []  # 啟動時季繳修復資料
 tmp_partime_list = []  # 啟動時零打修復資料
+cur_blame_user = []  # 懲罰清單
 # 指令--------------------------------------------------------
 cmd_data_list = None
 
@@ -140,13 +141,18 @@ def intro(event):
 # 報名
 def apply(event):
     msg_text = event.message.text
+    user_id = event.source.user_id
     apply_member = msg_text.split(' ')[1].lower()
     text = '報名失敗...請洽管理員 T____T'
     if initialize == False:
         text = '還沒開喔~~~不要急:)'
     else:
         if apply_member in cur_quarterly_list or apply_member in cur_parttime_list:
-            text = '已經報了拉!是要報幾次凸'
+            if user_id in cur_blame_user:
+                return ResultData(image='https://i.imgur.com/ElfhW41.jpg')
+            else:
+                cur_blame_user.append(user_id)
+                return ResultData(text='已經報了拉!是要報幾次凸')
         else:
             if apply_member not in cur_cancel_list:
                 cur_parttime_list.append(apply_member)
@@ -209,21 +215,17 @@ def initiate(event):
     msg_text = event.message.text
     input_date = msg_text.split(' ')[1]
 
-    global date_string
-    global week_day
-    global time_slots
-    global num_court
     global initialize
-    global num_vacancy
-    global cur_quarterly_list
-    global cur_parttime_list
-    global cur_cancel_list
+    global date_string, week_day, time_slots
+    global num_court, num_vacancy
+    global cur_quarterly_list, cur_parttime_list, cur_cancel_list, cur_blame_user
     global tmp_quarterly_list, tmp_partime_list
     initialize = True
 
     cur_quarterly_list = quarterly_list.copy()
     cur_parttime_list = []
     cur_cancel_list = []
+    cur_blame_user = []
     num_vacancy = num_court * num_seat_per_court
     # 日期
     date_string = input_date

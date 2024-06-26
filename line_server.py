@@ -173,7 +173,7 @@ def find_all_hash_indexes(pattern, text):
 # "hello$" emoji索引為5
 # 表情編號
 # https://developers.line.biz/en/docs/messaging-api/emoji-list/#line-emoji-definitions
-def get_emojis(msg_text, p_emojiIds):
+def get_emojis(msg_text: str, p_emojiIds):
     emojis = []
     emojiIds = p_emojiIds.copy()
     # $在正則是特殊字符,必須用\轉譯
@@ -185,7 +185,7 @@ def get_emojis(msg_text, p_emojiIds):
 
 
 # 回傳圖片
-def robot_reply_image(reply_token, img_url):
+def robot_reply_image(reply_token: str, img_url: str):
     line_bot_api_instance.reply_message_with_http_info(
         ReplyMessageRequest(
             reply_token=reply_token,
@@ -212,15 +212,6 @@ def robot_reply_image(reply_token, img_url):
 #     print("Friends list:", friends_list)
 
 # --------------------------------------------------
-# elif "!!!圖片" in msg_text:
-#     line_bot_api_instance.reply_message_with_http_info(
-#         ReplyMessageRequest(
-#             reply_token=reply_token,
-#             messages=[ImageMessage(
-#                 originalContentUrl="https://images.desenio.com/zoom/18197-8snoopylove50x70-79406.jpg",
-#                 previewImageUrl="https://images.desenio.com/zoom/18197-8snoopylove50x70-79406.jpg")]
-#         )
-#     )
 # elif "!!!地圖" in msg_text:
 #     line_bot_api_instance.reply_message_with_http_info(
 #         ReplyMessageRequest(
