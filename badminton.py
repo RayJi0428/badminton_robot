@@ -252,7 +252,7 @@ def initiate(event):
 # 修改時間
 def edit_time_slots(event):
     if initialize == False:
-        return ResultData(text='請先建立活動')
+        return admin_warning()
     msg_text = event.message.text
     input_time = msg_text.split(' ')[1]
 
@@ -268,7 +268,7 @@ def events_end(event):
     global initialize
 
     if initialize == False:
-        return ResultData(text='請先建立活動')
+        return admin_warning()
 
     text = ''
     initialize = False
@@ -281,7 +281,7 @@ def events_end(event):
 def edit_court(event):
     global num_vacancy
     if initialize == False:
-        return ResultData(text='請先建立活動')
+        return admin_warning()
     msg_text = event.message.text
     input_court = int(msg_text.split(' ')[1])
 
@@ -295,7 +295,7 @@ def edit_court(event):
 # 設定座位數
 def edit_vacancy(event):
     if initialize == False:
-        return ResultData(text='請先建立活動')
+        return admin_warning()
 
     msg_text = event.message.text
     input_vacancy = int(msg_text.split(' ')[1])
@@ -336,3 +336,7 @@ def add_quaterly_member(event):
         else:
             text = '本來就在裡面了阿'
     return ResultData(text=text)
+
+
+def admin_warning() -> ResultData:
+    return ResultData(text='請先建立活動$',emojiIds=['171'])

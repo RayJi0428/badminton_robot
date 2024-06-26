@@ -142,6 +142,12 @@ def run(line_param_data_list):
                     robot_reply_text(reply_token, '關你屁事?$', ["169"])
                     return
 
+                # 空格檢查
+                if cmd_data['要空格'] != '':
+                    msg_copy = msg_text.replace(cmd_data['KEY'], '')
+                    if msg_copy[0] != ' ':
+                        robot_reply_text(reply_token, '指令缺少空格$', ['164'])
+                        return
                 # 指令處理----------------------------------------------
                 # 指令處理----------------------------------------------
                 # 指令處理----------------------------------------------
@@ -154,7 +160,7 @@ def run(line_param_data_list):
                 elif result_data.reply_image != None:
                     robot_reply_image(reply_token, result_data.reply_image)
         except Exception as e:
-            robot_reply_text(reply_token, '發生錯誤!我被玩壞了$...', ["182"])
+            robot_reply_text(reply_token, '發生錯誤!我被玩壞了$', ["182"])
             logger.print(e.args[0])
 
     # 啟動server
@@ -178,6 +184,9 @@ def get_emojis(msg_text: str, p_emojiIds):
     emojiIds = p_emojiIds.copy()
     # $在正則是特殊字符,必須用\轉譯
     idx_list = find_all_hash_indexes('\$', msg_text)
+    if len(idx_list) == 0:
+        print('缺少特殊字符!!!!')
+        emojis = None
     for idx in idx_list:
         emojis.append(
             Emoji(index=idx, productId="5ac1bfd5040ab15980c9b435", emojiId=emojiIds.pop(0)))
