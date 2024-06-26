@@ -4,7 +4,7 @@ import badminton
 import utils
 import logger
 import re
-from result_data import ResultData
+from data import ResultData
 # 關閉相關
 import atexit
 import signal
@@ -126,14 +126,12 @@ def run(line_param_data_list):
                 reply_token = event.reply_token
                 print(f'user:{user_id}, msg:{msg_text}, token:{reply_token}')
 
-                if msg_text == 'aaa':
-                    robot_reply_image(
-                        reply_token, 'https://i.imgur.com/EsJ5HKa.png')
-                    return
-                # 不是指令直接忽略
+                # 指令檢查----------------------------------------------
+                # 指令檢查----------------------------------------------
+                # 指令檢查----------------------------------------------
                 cmd_data = badminton.find_cmd_in_msg(msg_text)
+                # 不是指令直接忽略
                 if cmd_data == None:
-                    print(f'忽略:{msg_text}')
                     if msg_text[0] == '/':
                         robot_reply_text(
                             reply_token, '目前沒這功能喔...敬請期待$', ['171'])
@@ -144,6 +142,8 @@ def run(line_param_data_list):
                     robot_reply_text(reply_token, '關你屁事?$', ["169"])
                     return
 
+                # 指令處理----------------------------------------------
+                # 指令處理----------------------------------------------
                 # 指令處理----------------------------------------------
                 result_data = badminton.call_cmd_fn(
                     cmd_data['function'], event)
@@ -194,6 +194,7 @@ def robot_reply_image(reply_token: str, img_url: str):
                 previewImageUrl=img_url)]
         )
     )
+
 # --------------------------------------------------
 # def get_friends_list(channel_access_token):
 #     headers = {

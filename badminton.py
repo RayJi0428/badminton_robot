@@ -2,7 +2,7 @@ import datetime
 import os
 import logger
 import utils
-from result_data import ResultData
+from data import ResultData
 global target_date
 
 tw_idx = ['一', '二', '三', '四', '五', '六', '日']
