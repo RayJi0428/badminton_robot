@@ -3,6 +3,7 @@ import flex
 import badminton
 import utils
 import logger
+import re
 
 # 關閉相關
 import atexit
@@ -22,6 +23,7 @@ from linebot.v3.messaging import (
     ReplyMessageRequest,
     PushMessageRequest,
     TextMessage,
+    Emoji,
     StickerMessage,  # 貼圖
     ImageMessage,  # 圖片
     LocationMessage,  # 地點
@@ -57,11 +59,14 @@ def robot_push_text(text, emojis=None):
 
 
 # 被動回應訊息
-def robot_reply_text(reply_token, text, emojis=None):
+def robot_reply_text(reply_token, reply_text, emojiIds=None):
+    emojis = None
+    if emojiIds != None:
+        emojis = get_emojis(reply_text, emojiIds)
     line_bot_api_instance.reply_message_with_http_info(
         ReplyMessageRequest(
             reply_token=reply_token,
-            messages=[TextMessage(text=text, emojis=emojis)]
+            messages=[TextMessage(text=reply_text, emojis=emojis)]
         )
     )
 
@@ -126,28 +131,13 @@ def run(line_param_data_list):
                 if cmd_data == None:
                     print(f'忽略:{msg_text}')
                     if msg_text[0] == '/':
-                        emojis = [
-                            {
-                                "index": 15,
-                                "productId": "5ac1bfd5040ab15980c9b435",
-                                "emojiId": "003"
-                            }
-                        ]
                         robot_reply_text(
-                            reply_token, '目前沒這功能喔...敬請期待$', emojis)
-                    return
-
+                            reply_token, '目前沒這功能喔...敬請期待$', ['171'])
+                        return
 
                 # admin指令權限檢查
                 if cmd_data['管理員限定'] != '' and badminton.is_admin(user_id) == False:
-                    emojis = [
-                        {
-                            "index": 5,
-                            "productId": "5ac1bfd5040ab15980c9b435",
-                            "emojiId": "169"
-                        }
-                    ]
-                    robot_reply_text(reply_token, '關你屁事?$', emojis)
+                    robot_reply_text(reply_token, '關你屁事?$', ["169"])
                     return
 
                 # 指令處理
@@ -155,18 +145,8 @@ def run(line_param_data_list):
                     cmd_data['function'], event)
                 robot_reply_text(reply_token, result_text)
                 return
-
-                if "/季繳" in msg_text:
-                    if badminton.is_admin(user_id):
-                        member_list_str = msg_text.split(' ')[1]
-                        member_list = member_list_str.split(',')
-                        result_text = badminton.add_quaterly_member(
-                            member_list)
-                        robot_reply_text(reply_token, result_text)
-                    else:
-                        robot_reply_text(reply_token, '關你屁事?')
         except Exception as e:
-            robot_reply_text(reply_token, '發生錯誤!我被玩壞了...')
+            robot_reply_text(reply_token, '發生錯誤!我被玩壞了$...', ["182"])
             logger.print(e.args[0])
 
     # 啟動server
@@ -174,6 +154,26 @@ def run(line_param_data_list):
     activate()
     app.run()
 
+
+def find_all_hash_indexes(pattern, text):
+    # 用正则表达式找出所有 '#' 的索引
+    return [m.start() for m in re.finditer(pattern, text)]
+
+
+# 目前一定要用$來替換!$$$很重要
+# https://www.evanlin.com/line-emoji/
+# "hello$" emoji索引為5
+# 表情編號
+# https://developers.line.biz/en/docs/messaging-api/emoji-list/#line-emoji-definitions
+def get_emojis(msg_text, p_emojiIds):
+    emojis = []
+    emojiIds = p_emojiIds.copy()
+    # $在正則是特殊字符,必須用\轉譯
+    idx_list = find_all_hash_indexes('\$', msg_text)
+    for idx in idx_list:
+        emojis.append(
+            Emoji(index=idx, productId="5ac1bfd5040ab15980c9b435", emojiId=emojiIds.pop(0)))
+    return emojis
 # --------------------------------------------------
 # def get_friends_list(channel_access_token):
 #     headers = {
