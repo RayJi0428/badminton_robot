@@ -135,7 +135,8 @@ def run(line_param_data_list):
                     if msg_text[0] == '/':
                         robot_reply_text(
                             reply_token, '目前沒這功能喔...敬請期待$', ['171'])
-                        return
+                    print(f'忽略 {msg_text}')
+                    return
 
                 # admin指令權限檢查
                 if cmd_data['管理員限定'] != '' and badminton.is_admin(user_id) == False:

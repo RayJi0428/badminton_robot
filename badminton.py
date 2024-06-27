@@ -146,11 +146,14 @@ def apply(event):
     result_data = ResultData()
 
     if initialize == False:
-        return ResultData(text='還沒開喔~~~不要急:)')
+        return admin_warning()
 
     # 報名多人
     for apply_member_name in apply_member_list:
         apply_member_name = apply_member_name.lower()
+        #空字串
+        if apply_member_name == "":
+            continue
         # 名稱過長
         if len(apply_member_name) > 20:
             result_data = ResultData(
@@ -192,7 +195,7 @@ def cancel(event):
     cancel_result = False
     text = '找不到阿...你確定你有報?凸'
     if initialize == False:
-        text = '還沒開取消屁?凸'
+        return admin_warning()
     elif cancel_member in cur_quarterly_list:
         cancel_result = True
         cur_quarterly_list.remove(cancel_member)
@@ -212,11 +215,9 @@ def cancel(event):
 # 查詢活動
 def query(event):
     if initialize == False:
-        text = '還沒開喔~~~不要急:)'
+        return admin_warning()
     else:
-        text = get_summary()
-
-    return ResultData(text=text)
+        return ResultData(text=get_summary())
 
 
 # 管理員指令處理================================================================
