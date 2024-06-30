@@ -98,6 +98,7 @@ def get_summary():
     final_permanent = cur_quarterly_list.copy()
     final_partime = cur_parttime_list.copy()
     mem_str = ''
+    remain = 0
     for i in range(0, num_vacancy):
         # 季繳
         if len(final_permanent) > 0:
@@ -109,10 +110,12 @@ def get_summary():
             mem_str += f'{i+1}.{member}(零打)\n'
         # 空位
         else:
+            remain += 1
             mem_str += f'{i+1}.\n'
 
     summary_str += mem_str
-
+    if remain <= 0:
+        summary_str += '🈵'
     logger.print(summary_str)
     logger.print('---------------------------------------')
 
@@ -134,7 +137,8 @@ def intro(event):
             devider = True
         key = cmd_data['KEY']
         tip = cmd_data['TIP']
-        text += f'{key} ({tip})\n'
+        if tip != "(不顯示)":
+            text += f'{key} ({tip})\n'
     return ResultData(text=text)
 
 
@@ -151,7 +155,7 @@ def apply(event):
     # 報名多人
     for apply_member_name in apply_member_list:
         apply_member_name = apply_member_name.lower()
-        #空字串
+        # 空字串
         if apply_member_name == "":
             continue
         # 名稱過長
