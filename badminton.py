@@ -1,3 +1,4 @@
+import re
 import datetime
 import os
 import logger
@@ -144,6 +145,7 @@ def intro(event):
 
 # 報名
 def apply(event):
+    global num_vacancy
     msg_text = event.message.text
     user_id = event.source.user_id
     apply_member_list = msg_text.split(' ')[1:]  # 第一個是指令key
@@ -151,6 +153,14 @@ def apply(event):
 
     if initialize == False:
         return admin_warning()
+
+    # 人數已滿
+    if len(cur_quarterly_list) + len(cur_parttime_list) == num_vacancy:
+        # 只有管理員可以滿了又報名
+        if is_admin(user_id) == True:
+            num_vacancy += len(apply_member_list)
+        else:
+            return ResultData(text=f'人數已滿...報名失敗$', emojiIds=['175'])
 
     # 報名多人
     for apply_member_name in apply_member_list:
@@ -242,7 +252,11 @@ def is_admin(userID):
 def initiate(event):
     msg_text = event.message.text
     input_date = msg_text.split(' ')[1]
+    create(input_date)
 
+
+# 建立活動實體
+def create(input_date):
     global initialize
     global date_string, week_day, time_slots
     global num_court, num_vacancy
@@ -368,3 +382,33 @@ def add_quaterly_member(event):
 
 def admin_warning() -> ResultData:
     return ResultData(text='請先建立活動$', emojiIds=['171'])
+
+
+# 以最終訊息修復
+def fix(event):
+    global num_court, num_vacancy
+    global tmp_quarterly_list, tmp_partime_list
+    msg_text = event.message.text
+    msg_lines = msg_text.splitlines()
+    msg_lines_len = len(msg_lines)
+    # 先建立活動
+    # date
+    input_date = re.search(r"\d+\/\d+", msg_lines[1])[0]
+    # court
+    num_court = int(re.search(r"\d+面", msg_lines[2])[0].replace('面', ''))
+    # mem
+    for i in range(3, msg_lines_len):
+        str = msg_lines[i].split('.')[1]
+        if str == '':
+            continue
+        elif '零打' in str:
+            tmp_partime_list.append(str.replace('(零打)', ''))
+        else:
+            tmp_quarterly_list.append(str)
+    create(input_date)
+
+    # 調整資料
+    # vacancy
+    num_vacancy = msg_lines_len-3
+    text = get_summary()
+    return ResultData(text=text)
