@@ -252,7 +252,7 @@ def is_admin(userID):
 def initiate(event):
     msg_text = event.message.text
     input_date = msg_text.split(' ')[1]
-    create(input_date)
+    return create(input_date)
 
 
 # 建立活動實體
