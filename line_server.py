@@ -147,7 +147,7 @@ def run(line_param_data_list):
                 if cmd_data['要空格'] != '':
                     msg_copy = msg_text.replace(cmd_data['KEY'], '')
                     if msg_copy[0] != ' ':
-                        robot_reply_text(reply_token, '指令缺少空格$', ['164'])
+                        robot_reply_text(reply_token, '指令後面缺少空格$', ['164'])
                         return
                 # 指令處理----------------------------------------------
                 # 指令處理----------------------------------------------
