@@ -132,7 +132,10 @@ def run(line_param_data_list):
                 cmd_data = badminton.find_cmd_in_msg(msg_text)
                 # 不是指令直接忽略
                 if cmd_data == None:
-                    if msg_text[0] == '/':
+                    if msg_text[0] == '/' and msg_text[1] == " ":
+                        robot_reply_text(
+                            reply_token, '要下指令嗎？斜線和指令中間不能有空格$', ['164'])
+                    elif msg_text[0] == '/':
                         robot_reply_text(
                             reply_token, '目前沒這功能喔...敬請期待$', ['171'])
                     print(f'忽略 {msg_text}')
