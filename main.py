@@ -4,6 +4,8 @@ import gspread
 import badminton
 import line_server
 import logger
+import os
+import sys
 # ====================================================
 sheet_admin = None
 sheet_admin_data_list = None
@@ -14,6 +16,11 @@ line_param_data_list = None
 cmd_param = None
 cmd_param_data_list = None
 # 取得googlesheet資料==================================
+# 先切換到當前目錄，才能正常讀取檔案
+cwd_dir = os.path.dirname(sys.argv[0])
+if cwd_dir != "":
+    os.chdir(cwd_dir)
+
 logger.print("開始讀取 google sheet...")
 try:
     gc = gspread.service_account(

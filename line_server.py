@@ -9,6 +9,9 @@ from data import ResultData
 import atexit
 import signal
 import sys
+import datetime
+import threading
+import time
 
 from linebot.v3 import (
     WebhookHandler
@@ -48,11 +51,10 @@ line_group_id = ''  # 群組ID
 
 # 主動push訊息
 def robot_push_text(text, emojis=None):
-    print(text)
-    return
+    global line_group_id
     line_bot_api_instance.push_message_with_http_info(
         PushMessageRequest(
-            to=badminton.get_group_id(),
+            to=line_group_id,
             messages=[TextMessage(text=text, emojis=emojis)]
         )
     )
@@ -93,7 +95,10 @@ def callback():
 
 # 啟動通知
 def activate():
-    robot_push_text("<機器人啟動>")
+    time.sleep(1)
+    today = datetime.date.today().strftime("%m/%d")
+    result_data = badminton.create(today)
+    robot_push_text(result_data.reply_text)
 
 
 # 關閉通知
@@ -164,12 +169,12 @@ def run(line_param_data_list):
                 elif result_data.reply_image != None:
                     robot_reply_image(reply_token, result_data.reply_image)
         except Exception as e:
-            robot_reply_text(reply_token, '發生錯誤!我被玩壞了$', ["182"])
+            robot_reply_text(reply_token, f'發生錯誤:{e.args[0]}$', ["182"])
             logger.print(e.args[0])
 
     # 啟動server
-    atexit.register(deactivate)
-    activate()
+    # atexit.register(deactivate)
+    threading.Thread(target=activate).start()
     app.run()
 
 
