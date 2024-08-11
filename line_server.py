@@ -95,8 +95,10 @@ def callback():
 
 # 啟動通知
 def activate():
+    print("A")
     time.sleep(1)
-    today = datetime.date.today().strftime("%m/%d")
+    today = (datetime.date.today() +
+             datetime.timedelta(days=6)).strftime("%m/%d")
     result_data = badminton.create(today)
     robot_push_text(result_data.reply_text)
 

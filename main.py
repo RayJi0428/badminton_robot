@@ -32,7 +32,7 @@ try:
 
     badminton_param = sheet.worksheet("羽球參數")
     badminton_param_data_list = badminton_param.get_all_records(
-        False, 1, "", True)
+        False, 1, "", False)
 
     line_param = sheet.worksheet("LINE參數")
     line_param_data_list = line_param.get_all_records(

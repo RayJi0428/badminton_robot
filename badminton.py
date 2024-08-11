@@ -57,6 +57,7 @@ def init(p_admin_data_list, p_param_data_list, p_cmd_data_list):
     num_seat_per_court = utils.get_param_by_key(param_data_list, '一場預設人數')
     time_slots = utils.get_param_by_key(param_data_list, '預設時段')
     quarterly_list = utils.get_param_by_key(param_data_list, '季繳名單').split(',')
+    quarterly_list = list(map(lambda x: x.lower(), quarterly_list))
     tmp_quarterly_list_str = utils.get_param_by_key(param_data_list, '啟動修復季繳')
     if tmp_quarterly_list_str != None:
         tmp_quarterly_list = tmp_quarterly_list_str.split(',')
@@ -388,10 +389,12 @@ def admin_warning() -> ResultData:
 def fix(event):
     global num_court, num_vacancy
     global tmp_quarterly_list, tmp_partime_list
+    global initialize
     msg_text = event.message.text
     msg_lines = msg_text.splitlines()
     msg_lines_len = len(msg_lines)
     # 先建立活動
+    initialize = True
     # date
     input_date = re.search(r"\d+\/\d+", msg_lines[1])[0]
     # court
