@@ -1,17 +1,17 @@
 from flask import Flask, request, abort
-import flex
 import badminton
 import utils
 import logger
 import re
-from data import ResultData
 # 關閉相關
-import atexit
-import signal
-import sys
 import datetime
 import threading
 import time
+
+# 定時
+import schedule
+import time
+import threading
 
 from linebot.v3 import (
     WebhookHandler
@@ -27,13 +27,7 @@ from linebot.v3.messaging import (
     PushMessageRequest,
     TextMessage,
     Emoji,
-    StickerMessage,  # 貼圖
-    ImageMessage,  # 圖片
-    LocationMessage,  # 地點
-    Template,
-    TemplateMessage,  # 選單
-    FlexMessage,
-    FlexContainer
+    ImageMessage  # 圖片
 )
 from linebot.v3.webhooks import (
     MessageEvent,
@@ -95,17 +89,13 @@ def callback():
 
 # 啟動通知
 def activate():
-    print("A")
-    time.sleep(1)
-    today = (datetime.date.today() +
-             datetime.timedelta(days=6)).strftime("%m/%d")
-    result_data = badminton.create(today)
-    robot_push_text(result_data.reply_text)
+    # do something...
+    logger.print('<機器人啟動>')
 
 
 # 關閉通知
 def deactivate():
-    robot_push_text("<機器人關閉>")
+    logger.print("<機器人關閉>")
 
 
 # 啟動
@@ -250,3 +240,27 @@ def robot_reply_image(reply_token: str, img_url: str):
 #             reply_token=reply_token,
 #             messages=[message])
 #     )
+
+
+# 多線程定時任務-------------------------------------------------------
+def job():
+    print("Task is running...")
+    new_badminton_date = (datetime.date.today() +
+                          datetime.timedelta(days=6)).strftime("%m/%d")
+    result_data = badminton.create(new_badminton_date)
+    robot_push_text(result_data.reply_text)
+
+
+def run_schedule():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+# Schedule the job every Saturday at a specific time
+schedule.every().sunday.at("12:00").do(job)
+
+# Start the schedule in a separate thread
+schedule_thread = threading.Thread(target=run_schedule)
+schedule_thread.daemon = True
+schedule_thread.start()
