@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.11
+
 import requests
 import json
 import gspread
@@ -6,6 +8,7 @@ import line_server
 import logger
 import os
 import sys
+
 # ====================================================
 sheet_admin = None
 sheet_admin_data_list = None
@@ -49,3 +52,4 @@ badminton.init(sheet_admin_data_list,
                badminton_param_data_list,  cmd_param_data_list)
 
 line_server.run(line_param_data_list)
+
