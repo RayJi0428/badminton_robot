@@ -208,7 +208,7 @@ def cancel(event):
     cancel_member = msg_text.split(' ')[1].lower()
 
     cancel_result = False
-    text = '找不到阿...你確定你有報?凸'
+    text = '找不到阿...你確定你有報?'
     if initialize == False:
         return admin_warning()
     elif cancel_member in cur_quarterly_list:
@@ -273,7 +273,7 @@ def create(input_date):
     # 日期
     date_string = input_date
     date_string_list = input_date.split('/')
-    y = datetime.datetime.today().year
+    y = 2025#datetime.datetime.today().year
     m = date_string_list[0]
     d = date_string_list[1]
     full_date_string = f'{y}-{m}-{d}'
