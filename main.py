@@ -27,7 +27,7 @@ if cwd_dir != "":
 logger.print("開始讀取 google sheet...")
 try:
     gc = gspread.service_account(
-        filename='./authorize/badminton-426909-fa7d76bbe33e.json')
+        filename='./authorize/badminton-426909-9ec97d6addfe.json')
     sheet = gc.open('羽球小幫手')
 
     sheet_admin = sheet.worksheet("管理員")
