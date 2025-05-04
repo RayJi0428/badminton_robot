@@ -27,23 +27,20 @@ if cwd_dir != "":
 logger.print("開始讀取 google sheet...")
 try:
     gc = gspread.service_account(
-        filename='./authorize/badminton-426909-9ec97d6addfe.json')
+        filename='./authorize/badminton-426909-7d8875fbb055.json')
     sheet = gc.open('羽球小幫手')
 
     sheet_admin = sheet.worksheet("管理員")
-    sheet_admin_data_list = sheet_admin.get_all_records(False, 1, "", True)
+    sheet_admin_data_list = sheet_admin.get_all_records()
 
     badminton_param = sheet.worksheet("羽球參數")
-    badminton_param_data_list = badminton_param.get_all_records(
-        False, 1, "", False)
+    badminton_param_data_list = badminton_param.get_all_records()
 
     line_param = sheet.worksheet("LINE參數")
-    line_param_data_list = line_param.get_all_records(
-        False, 1, "", False)
+    line_param_data_list = line_param.get_all_records()
 
     cmd_param = sheet.worksheet("指令參數")
-    cmd_param_data_list = cmd_param.get_all_records(
-        False, 1, "", False)
+    cmd_param_data_list = cmd_param.get_all_records()
 except Exception as e:
     logger.print("讀取 sheet_data 失敗\n" + str(e))
 
@@ -52,4 +49,3 @@ badminton.init(sheet_admin_data_list,
                badminton_param_data_list,  cmd_param_data_list)
 
 line_server.run(line_param_data_list)
-
